@@ -10,18 +10,21 @@ st.set_page_config(page_icon="✈️", layout="wide")
 
 
 # https://github.com/tonykipkemboi/trip_planner_agent/blob/main/streamlit_app.py
+# https://github.com/amadad/civic-agentcy/blob/main/src/civic_agentcy/tools/search_tools.py
 
+widget_width = 980
 def tradingview_chart(symbol):
     """Shows a TradingView chart."""
     components.html(
         f"""
-        <div class="tradingview-widget-container" >
-            <div id="tradingview_1c6e3" style='align:left'></div>
+         <div style="display: flex; justify-content: flex-start;">
+        <div class="tradingview-widget-container" align="left" >
+            <div id="tradingview_1c6e3" ></div>
             <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
             <script type="text/javascript">
             new TradingView.widget(
             {{
-            "width": 980,
+            "width": {widget_width},
             "height": 610,
             "symbol": "{symbol}",
             "interval": "D",
@@ -32,11 +35,17 @@ def tradingview_chart(symbol):
             "toolbar_bg": "#f1f3f6",
             "enable_publishing": false,
             "allow_symbol_change": true,
+            "studies": [
+                "ROC@tv-basicstudies",
+            ],
+            "custom_font_family": 'Roboto',
             "container_id": "tradingview_1c6e3"
             }}
             );
             </script>
         </div>
+        </div>
+        
         """,
         height=700,
     )
@@ -46,7 +55,7 @@ def get_info_widget(
         ticker: str = "AAPL",
         theme: str = "dark",
 ):
-    width = 1500
+    width = widget_width
     height = 200
 
     header = '''
@@ -84,18 +93,9 @@ def get_info_widget(
 
 
 
-info, info_width, info_height = get_info_widget(
-    ticker="BTCUSD",
-    theme="light",
 
-)
-
-components.html(
-    info,
-    height=info_height,
-    width=info_width,
-)
 tradingview_chart("BTCUSD")
+
 
 
 def icon(emoji: str):
@@ -223,5 +223,18 @@ if submitted:
     st.subheader(f"Here is your {coin} analysis", anchor=False, divider="rainbow")
 
     st.markdown("### Analysis Result", unsafe_allow_html=True)
+    info, info_width, info_height = get_info_widget(
+        ticker="BTCUSD",
+        theme="light",
+
+    )
+
+    components.html(
+        info,
+        height=info_height,
+        width=info_width,
+    )
+
+
     # Assuming crew_result is a string. If it's not, you might need to convert or format it accordingly.
     st.markdown(f"<div style='white-space: pre-wrap;'>{result.get('final_output')}</div>", unsafe_allow_html=True)

@@ -9,7 +9,7 @@ from langchain_groq import ChatGroq
 import streamlit as st
 
 from tools.price_tools import cryptocurrency_price_tool
-from tools.search_tool import cryptocurrency_news_tool
+from tools.search_tools import cryptocurrency_news_tool
 
 
 class CryptoAgents:

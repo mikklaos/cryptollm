@@ -4,15 +4,17 @@ from cryptoTasks import CryptoTasks
 import streamlit as st
 import streamlit.components.v1 as components
 from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 import datetime
 
 st.set_page_config(page_icon="✈️", layout="wide")
-
 
 # https://github.com/tonykipkemboi/trip_planner_agent/blob/main/streamlit_app.py
 # https://github.com/amadad/civic-agentcy/blob/main/src/civic_agentcy/tools/search_tools.py
 
 widget_width = 980
+
+
 def tradingview_chart(symbol):
     """Shows a TradingView chart."""
     components.html(
@@ -92,12 +94,6 @@ def get_info_widget(
     )
 
 
-
-
-tradingview_chart("BTCUSD")
-
-
-
 def icon(emoji: str):
     """Shows an emoji as a Notion-style page icon."""
     st.write(
@@ -113,6 +109,7 @@ class CryptoCrew:
         self.coin = coin
         self.timeframe = timeframe
         self.llm = ChatGroq(temperature=0, model_name="llama3-70b-8192")
+        # self.llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo")
 
     def run(self):
         agents = CryptoAgents()
@@ -156,7 +153,12 @@ class CryptoCrew:
         return result
 
 
-if __name__ == "__main__":
+def set_correct_coin_name(step_output):
+    global coin
+    coin = step_output.return_values.get('output')
+
+
+def start():
     icon("💵 CryptoAI")
 
     st.subheader("Crypto price prediction bot!",
@@ -212,29 +214,32 @@ if __name__ == "__main__":
             icon="🚀"
         )
 
-if submitted:
-    with st.status("🤖 **Agents at work...**", state="running", expanded=True) as status:
-        with st.container(height=500, border=False):
-            trip_crew = CryptoCrew(coin, timeframe)
-            result = trip_crew.run()
-        status.update(label=f"✅ {coin} analysis Ready!",
-                      state="complete", expanded=False)
+    if submitted:
+        with st.status("🤖 **Agents at work...**", state="running", expanded=True) as status:
+            with st.container(height=500, border=False):
+                trip_crew = CryptoCrew(coin, timeframe)
+                result = trip_crew.run()
+            status.update(label=f"✅ {coin} analysis Ready!",
+                          state="complete", expanded=False)
 
-    st.subheader(f"Here is your {coin} analysis", anchor=False, divider="rainbow")
+        st.subheader(f"Here is your {coin} analysis", anchor=False, divider="rainbow")
 
-    st.markdown("### Analysis Result", unsafe_allow_html=True)
-    info, info_width, info_height = get_info_widget(
-        ticker="BTCUSD",
-        theme="light",
+        st.markdown("### Analysis Result", unsafe_allow_html=True)
+        info, info_width, info_height = get_info_widget(
+            ticker=f"{coin}",
+            theme="light",
 
-    )
+        )
 
-    components.html(
-        info,
-        height=info_height,
-        width=info_width,
-    )
+        components.html(
+            info,
+            height=info_height,
+            width=info_width,
+        )
 
+        tradingview_chart(f"{coin}")
 
-    # Assuming crew_result is a string. If it's not, you might need to convert or format it accordingly.
-    st.markdown(f"<div style='white-space: pre-wrap;'>{result.get('final_output')}</div>", unsafe_allow_html=True)
+        # Assuming crew_result is a string. If it's not, you might need to convert or format it accordingly.
+        st.markdown(f"<div style='white-space: pre-wrap;'>{result.get('final_output')}</div>", unsafe_allow_html=True)
+
+start()

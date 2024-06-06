@@ -8,6 +8,7 @@ from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_groq import ChatGroq
 import streamlit as st
 
+from streamlit_app import set_correct_coin_name
 from tools.price_tools import cryptocurrency_price_tool
 from tools.search_tools import cryptocurrency_news_tool
 
@@ -16,14 +17,14 @@ class CryptoAgents:
     def customer_communicator(self, llm):
         return Agent(
             role="Senior cryptocurrency customer communicator",
-            goal="Find which cryptocurrency the customer is interested in",
+            goal="Find which cryptocurrency the customer is interested in. Example: customer types in BTC or bitcoin output will be BTC. Customer types in algorand output will be algo",
             backstory="""You're highly experienced in communicating about cryptocurrencies and blockchain technology with customers and their research needs""",
             verbose=True,
             allow_delegation=False,
             llm=llm,
             max_iter=5,
             memory=True,
-            step_callback=streamlit_callback,
+            step_callback=set_correct_coin_name,
             human_input=True
         )
 

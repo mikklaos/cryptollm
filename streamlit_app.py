@@ -9,7 +9,9 @@ from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 import datetime
 
-st.set_page_config(page_icon="✈️", layout="wide")
+st.set_page_config(page_icon="✈️",
+                   layout="wide",
+                   page_title="CryptoAI")
 
 # https://github.com/tonykipkemboi/trip_planner_agent/blob/main/streamlit_app.py
 # https://github.com/amadad/civic-agentcy/blob/main/src/civic_agentcy/tools/search_tools.py
@@ -160,6 +162,7 @@ class CryptoCrew:
 
 def start():
     icon("💵 CryptoAI")
+
 
     st.subheader("Crypto price prediction bot!",
                  divider="rainbow", anchor=False)

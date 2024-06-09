@@ -5,6 +5,8 @@ import os
 import requests, json
 from datetime import datetime, timedelta
 
+from tavily import TavilyClient
+
 search_tool = DuckDuckGoSearchResults(backend="news", num_results=10)
 
 
@@ -104,15 +106,17 @@ class ExaSearch(BaseTool):
 
 class TavilySearch(BaseTool):
     name: str = "Tavily Search"
-    description: str = "Performs a comprehensive search using the Tavily API and returns a summary of results."
+    description: str = "Performs a comprehensive search using the Tavily API and returns a summary of results. Example  query 'Should I invest in Apple in 2024?'"
 
     def _run(self, query: str) -> str:
         tavily_api_key = os.getenv("TAVILY_API_KEY")
         if not tavily_api_key:
             raise ValueError("TAVILY_API_KEY environment variable not set")
+        tavily = TavilyClient(api_key=tavily_api_key)
+
         # Assuming the TavilySearchResults class exists and works as expected.
         # The implementation details for invoking the Tavily API are omitted for brevity.
-        return "Comprehensive search results from Tavily API"
+        return tavily.search(query=query)
 
 
 class YouSummarize(BaseTool):

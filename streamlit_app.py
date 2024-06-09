@@ -1,4 +1,6 @@
 from crewai import Crew, Process
+
+from selected_coin import selected_coin
 from mainCrew import CryptoAgents
 from cryptoTasks import CryptoTasks
 import streamlit as st
@@ -106,10 +108,10 @@ class CryptoCrew:
 
     def __init__(self, coin, timeframe):
         self.output_placeholder = st.empty()
-        self.coin = coin
+
         self.timeframe = timeframe
-        self.llm = ChatGroq(temperature=0, model_name="llama3-70b-8192")
-        # self.llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo")
+        # self.llm = ChatGroq(temperature=0, model_name="llama3-70b-8192")
+        self.llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo")
 
     def run(self):
         agents = CryptoAgents()
@@ -118,10 +120,10 @@ class CryptoCrew:
         customer_communicator = agents.customer_communicator(self.llm)
         price_analyst = agents.price_analyst(self.llm, self.timeframe)
         news_analyst = agents.news_analyst(self.llm)
-        writer = agents.writer(self.llm)
+        writer = agents.writer(self.llm, self.timeframe)
 
         get_cryptocurrency_task = tasks.get_cryptocurrency(
-            customer_communicator, self.coin
+            customer_communicator, selected_coin.coin
         )
 
         get_news_analysis_task = tasks.get_news_analysis(
@@ -153,9 +155,7 @@ class CryptoCrew:
         return result
 
 
-def set_correct_coin_name(step_output):
-    global coin
-    coin = step_output.return_values.get('output')
+
 
 
 def start():
@@ -186,7 +186,7 @@ def start():
     with st.sidebar:
         st.header("👇 Enter crypto to analyze")
         with st.form("my_form"):
-            coin = st.text_input(
+            selected_coin.coin = st.text_input(
                 "What crypto you want to analyse?", placeholder=" eg. Bitcoin, Ethereum, Dogecoin")
 
             # Define the options in months and corresponding days
@@ -200,6 +200,7 @@ def start():
 
             # Create a dropdown menu with the options
             timeframe = st.selectbox("How long do you wish to invest?", list(options.keys()))
+
 
             submitted = st.form_submit_button("Submit")
 
@@ -217,8 +218,12 @@ def start():
     if submitted:
         with st.status("🤖 **Agents at work...**", state="running", expanded=True) as status:
             with st.container(height=500, border=False):
+                coin=selected_coin.coin
+                st.session_state.timeframe = timeframe
+
                 trip_crew = CryptoCrew(coin, timeframe)
                 result = trip_crew.run()
+
             status.update(label=f"✅ {coin} analysis Ready!",
                           state="complete", expanded=False)
 
@@ -226,7 +231,7 @@ def start():
 
         st.markdown("### Analysis Result", unsafe_allow_html=True)
         info, info_width, info_height = get_info_widget(
-            ticker=f"{coin}",
+            ticker=f"{selected_coin.coin}USD",
             theme="light",
 
         )
@@ -237,7 +242,8 @@ def start():
             width=info_width,
         )
 
-        tradingview_chart(f"{coin}")
+        print(f"coin: {selected_coin.coin}","="*50)
+        tradingview_chart(f"{selected_coin.coin}USD")
 
         # Assuming crew_result is a string. If it's not, you might need to convert or format it accordingly.
         st.markdown(f"<div style='white-space: pre-wrap;'>{result.get('final_output')}</div>", unsafe_allow_html=True)

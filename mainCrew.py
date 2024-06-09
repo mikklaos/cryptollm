@@ -8,16 +8,21 @@ from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_groq import ChatGroq
 import streamlit as st
 
-from streamlit_app import set_correct_coin_name
+from selected_coin import selected_coin, completed
 from tools.price_tools import cryptocurrency_price_tool
 from tools.search_tools import cryptocurrency_news_tool
+from tools.search_tools import ExaSearch, TavilySearch
 
 
 class CryptoAgents:
+    def __init__(self):
+        self.exa = ExaSearch()
+        self.tavily = TavilySearch()
+
     def customer_communicator(self, llm):
         return Agent(
             role="Senior cryptocurrency customer communicator",
-            goal="Find which cryptocurrency the customer is interested in. Example: customer types in BTC or bitcoin output will be BTC. Customer types in algorand output will be algo",
+            goal="Find which cryptocurrency the customer is interested in. Example: customer types in BTC or bitcoin output will be BTC. Output should be the cryptocurrency symbol.",
             backstory="""You're highly experienced in communicating about cryptocurrencies and blockchain technology with customers and their research needs""",
             verbose=True,
             allow_delegation=False,
@@ -39,13 +44,13 @@ class CryptoAgents:
             max_iter=5,
             memory=True,
             step_callback=streamlit_callback,
-            tools=[cryptocurrency_news_tool],
+            tools=[self.tavily],
         )
 
-    def price_analyst(self, llm,timeframe=60):
+    def price_analyst(self, llm, timeframe=60):
         return Agent(
             role="Cryptocurrency Price Analyst",
-            goal=f"""Get historical prices for a given cryptocurrency. Write 1 paragraph analysis of the market and give me entry and exit prices including stop loss. Include important support and resitance levels. Make sure analysis is based on {timeframe} days of data""",
+            goal=f"""Get historical prices for a given cryptocurrency. Write 1 paragraph analysis of the market and give me entry and exit prices including stop loss. Include important support and resitance levels. Make sure analysis is based on {timeframe} of data""",
             backstory="""You're an expert analyst of trends based on cryptocurrency historical prices. You have a complete understanding of macroeconomic factors, but you specialize into technical analys based on historical prices.""",
             verbose=True,
             allow_delegation=False,
@@ -56,10 +61,10 @@ class CryptoAgents:
             tools=[cryptocurrency_price_tool],
         )
 
-    def writer(self, llm):
+    def writer(self, llm, timeframe=60):
         return Agent(
             role="Cryptocurrency Report Writer",
-            goal="""Write 1 paragraph report with 5 important bulletpoints of the cryptocurrency market in markdown format. Make sure that output Include a prediction for the future trend - up, down or neutral. Use emojis to make the report more engaging.""",
+            goal=f"""Write 3 paragraph report for {timeframe} of data. Report should help user to make investment decision for {timeframe}. First paragraph with important news and trends. Second paragraph with 5 important bulletpoints of the cryptocurrency market in markdown format. Third paragraph should have 3 bulletpoints: entry price, stopp loss, takeprofit price. Make sure that output Include a prediction for the future trend - up, down or neutral. Use emojis to make the report more engaging.The output should be presented in Markdown format without using LaTEx notation""",
             backstory="""You're widely accepted as the best cryptocurrency analyst that understands the market and have tracked every asset for more than 10 years. Your trends analysis are always extremely accurate. You're also master level analyst in the traditional markets and have deep understanding of human psychology. You understand macro factors and combine those multiple theories - e.g. cycle theory. You're able to hold multiple opininons when analysing anything. You understand news and historical prices, but you look at those with a healthy dose of skepticism. You also consider the source of news articles. Your most well developed talent is providing clear and concise summarization that explains very complex market topics in simple to understand terms. Some of your writing techniques include: - Creating a bullet list (executive summary) of the most importannt points - Distill complex analyses to their most important parts You writing transforms even dry and most technical texts into a pleasant and interesting read.""",
             llm=llm,
             verbose=True,
@@ -70,29 +75,8 @@ class CryptoAgents:
         )
 
 
-human_tools = load_tools(["human"])
-
-
-# system = "You are experienced Machine Learning & AI Engineer."
-# human = "{text}"
-# prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
-#
-# chain = prompt | llm
-# response = chain.invoke({"text": "How to increase inference speed for a 7B LLM?"})
-
-
-
-
-# crew = Crew(
-#     agents=[customer_communicator, price_analyst, news_analyst, writer],
-#     tasks=[get_cryptocurrency, get_news_analysis, get_price_analysis, write_report],
-#     verbose=2,
-#     process=Process.sequential,
-#     full_output=True,
-#     share_crew=False,
-#     manager_llm=llm,
-#     max_iter=15,
-# )
+def set_correct_coin_name(step_output):
+    selected_coin.coin = step_output.return_values.get('output')
 
 
 def streamlit_callback(step_output):
@@ -132,3 +116,4 @@ def streamlit_callback(step_output):
                 st.markdown(str(observation))
         else:
             st.markdown(step)
+        completed.agents = completed.agents + 1

@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import streamlit as st
 from crewai import Task
 
 
@@ -31,7 +31,7 @@ class CryptoTasks:
     def write_report(self, agent, context):
         return Task(
             description="Use the reports from the news analyst and the price analyst to create a report that summarizes the cryptocurrency.",
-            expected_output="1 paragraph report that summarizes the market and predicts the future prices (trend) for the cryptocurrency. The advisor should provide specific entry points for each strategy, along with the corresponding stop loss and take profit prices.",
+            expected_output=f"1 paragraph report that summarizes the market and predicts the future prices (trend) for the cryptocurrency for . The advisor should provide specific entry points for each strategy, along with the corresponding stop loss and take profit prices.",
             agent=agent,
             context=context,
         )
